@@ -34,6 +34,7 @@ refreshError = "Erreur pendant la mise à jour de l'emploi du temps. Le site de 
 manageRolesPermError = "Je n'ai pas la permission `Gérer les rôles`, imposible de créer le rôle *{}* présent dans l'emploi du temps."
 argumentError = "Argument `{}` incorrect : \"{}\"."
 noDataError = "<erreur>"
+noEventError = "Pas d'évènements"
 
 refreshCommandBrief = "Force la mise à jour de l'emploi du temps."
 requestCommandBrief = "Renvoie tous les évènements restants dans ta journée."

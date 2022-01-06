@@ -59,7 +59,13 @@ def cacheIcs() -> None:
     """Load the downloaded ICS file into the global var IcsCache"""
     global IcsCache
     if IcsCache == []:
+        logging.info("Loading ICS file to cache.")
         IcsCache = icalevents.icalevents.events(file=IcsFileName)
+        for event in IcsCache.copy():
+            if event.end < datetime.now(tz=tzutc()) or event.start > datetime.now(tz=tzutc()) + relativedelta(days=+16):
+                IcsCache.remove(event)
+    else:
+        logging.info("Loading data from cache.")
 
 def getIcsGroups(IcsFileName: str) -> typing.List[str]:
     """Fetch all groups from an ICS file."""
@@ -109,10 +115,11 @@ async def refreshRoutine(guilds: typing.List[discord.Guild], channel: discord.Ch
         await channel.send(text.refreshSuccess)
 
 def main():
+    global IcsCache
     load_dotenv()
     TOKEN = os.getenv('DISCORD_TOKEN')
     bot = commands.Bot(command_prefix="/")
-    logging.basicConfig(filename="UA-Discord-EDT.log", level=logging.INFO)
+    logging.basicConfig(filename="UA-Discord-EDT.log", level=logging.DEBUG)
 
     @bot.event
     async def on_ready():
@@ -132,6 +139,7 @@ def main():
     ):
         """Request all events happening in the given time period for the given groups.
         Defaults to the rest of the day and for all the groups the user belongs to."""
+        global IcsCache
         async with ctx.typing():
             logging.info(f"Request command: time={time}, groups={groups}.")
 
@@ -188,7 +196,7 @@ def main():
 
             # creation, filtering and sorting of the event list
             cacheIcs()
-            events = IcsCache
+            events = IcsCache.copy()
             for event in events.copy():
                 eventTimeRange = DateTimeRange(start_datetime=event.start.replace(tzinfo=tzutc()), end_datetime=event.end.replace(tzinfo=tzutc()))
                 if not eventTimeRange.is_intersection(requestTimeRange):
@@ -198,6 +206,7 @@ def main():
                 if not any([group in eventGroups for group in groups]):
                     events.remove(event)
             events.sort(key=lambda event: event.start.timestamp())
+            logging.debug("Done filtering event list.")
 
             # Discord embed assembling
             embed = discord.Embed()
@@ -209,6 +218,8 @@ def main():
                 lastUpdate = datetime.fromisoformat(LastUpdateFile.readline())
                 embed.set_footer(text=f"""\
                     {text.timetableEmbedUpdate} {lastUpdate.strftime("%a %d/%m %Hh%M")}\n{text.timetableEmbedGroups} {", ".join(groups)}""")
+            if len(events) == 0:
+                embed.description = text.noEventError
             for index, event in enumerate(events):
                 category = room = subject = teacher = text.noDataError
                 details = ""

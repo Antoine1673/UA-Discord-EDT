@@ -34,6 +34,7 @@ refreshError = "Error while refreshing timetable. The university's website might
 manageRolesPermError = "I don't have the permission `Manage Roles`, I cannot create the role *{}* according to the timetable groups."
 argumentError = "incorrect `{}` argument : \"{}\"."
 noDataError = "<error>"
+noEventError = "No events"
 
 refreshCommandBrief = "Refresh the timetable."
 requestCommandBrief = "Give all the events for the rest of your day"
